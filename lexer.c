@@ -67,8 +67,7 @@ char tokenNames[][10] = {
 	"NOT",
 	"ASSIGN",
 	"EQUAL",
-	"LESS"
-};
+	"LESS"};
 
 typedef struct
 {
@@ -103,7 +102,7 @@ int getNextTk() // get next token (atom lexical)
 	for (;;)
 	{
 		char ch = *pch;							// caracterul curent
-		printf("#%:d %c(%d)\n", state, ch, ch); // pt debugging
+		printf("#%d %c(%d)\n", state, ch, ch); // pt debugging
 		// cate un case pentru fiecare stare din diagrama
 		switch (state)
 		{
@@ -121,6 +120,12 @@ int getNextTk() // get next token (atom lexical)
 				pch++;
 			}
 			else if (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t')
+			{
+				pch++;
+				if (ch == '\n')
+					linie++;
+			}
+			else if (ch == '#')
 			{
 				pch++;
 				if (ch == '\n')
@@ -199,6 +204,13 @@ int getNextTk() // get next token (atom lexical)
 	}
 }
 
+void printTokens()
+{
+	for (int i = 0; i < nAtomi; i++)
+	{
+		printf("%s ", tokenNames[atomi[i].cod]);
+	}
+}
 
 int main()
 {
@@ -214,10 +226,11 @@ int main()
 	fclose(fis);
 	pch = bufin; // initializare pch pe prima pozitie din bufin
 
+	while (getNextTk() != FINISH)
+		;
 	// printf("%s",bufin);
 	// extragere atomi
-	// while(getNextTk()!=FINISH){
-	// 	}
+
 	// afisare atomi
 	//...
 }
