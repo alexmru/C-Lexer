@@ -133,11 +133,39 @@ int getNextTk() // get next token (atom lexical)
 				strcpy(atomi[nAtomi - 1].s, buf);
 			}
 			return ID;
+		case 3:
+			if (isdigit(ch))
+			{
+				state = 3;
+				pch++;
+			}
+			else if (ch = '.')
+			{
+				state = 4;
+				pch++;
+			}
+			else
+			{
+				addAtom(INT);
+			}
+			break;
+		case 4:
+			if (isdigit(ch))
+			{
+				state = 4;
+				pch++;
+			}
+			else
+			{
+				addAtom(INT);
+			}
+
 		default:
 			printf("stare invalida %d\n", state);
 		}
 	}
 }
+
 
 int main()
 {
