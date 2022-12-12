@@ -37,6 +37,39 @@ enum
 	LESS
 }; // toate codurile atomilor din Quick, fara SPACE si COMMENT
 
+char tokenNames[][10] = {
+	"ID",
+	"VAR",
+	"FUNCTION",
+	"IF",
+	"ELSE",
+	"WHILE",
+	"END",
+	"RETURN",
+	"TYPE_INT",
+	"TYPE_REAL",
+	"TYPE_STR",
+	"INT",
+	"REAL",
+	"STR",
+	"COMMA",
+	"COLON",
+	"SEMICOLON",
+	"LPAR",
+	"RPAR",
+	"FINISH",
+	"ADD",
+	"SUB",
+	"MUL",
+	"DIV",
+	"AND",
+	"OR",
+	"NOT",
+	"ASSIGN",
+	"EQUAL",
+	"LESS"
+};
+
 typedef struct
 {
 	int cod;   // codul atomului ( ID, INT, ...)
@@ -139,7 +172,7 @@ int getNextTk() // get next token (atom lexical)
 				state = 3;
 				pch++;
 			}
-			else if (ch = '.')
+			else if (ch == '.')
 			{
 				state = 4;
 				pch++;
@@ -157,7 +190,7 @@ int getNextTk() // get next token (atom lexical)
 			}
 			else
 			{
-				addAtom(INT);
+				addAtom(REAL);
 			}
 
 		default:
