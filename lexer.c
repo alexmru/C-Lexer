@@ -90,7 +90,7 @@ int linie = 1; // linia curenta; adaugata automat la atom de addAtom
 
 void addAtom(int Atom)
 {
-	atomi[nAtomi].cod = Atom;
+	atomi[nAtomi++].cod = Atom;
 }
 
 // la fiecare apel returneaza codul unui atom
@@ -101,8 +101,8 @@ int getNextTk() // get next token (atom lexical)
 	int n = 0; // nr caractere din buf
 	for (;;)
 	{
-		char ch = *pch;							// caracterul curent
-		printf("#%d %c(%d)\n", state, ch, ch); // pt debugging
+		char ch = *pch;										 // caracterul curent
+		printf("#%d %c (%d)\n", state, ch, *pch - bufin[0]); // pt debugging
 		// cate un case pentru fiecare stare din diagrama
 		switch (state)
 		{
@@ -128,9 +128,55 @@ int getNextTk() // get next token (atom lexical)
 			else if (ch == '#')
 			{
 				pch++;
-				if (ch == '\n')
-					linie++;
+				state = 5;
+				break;
 			}
+			else if (ch == ',')
+			{
+				addAtom(COMMA);
+			}
+			else if (ch == ':')
+			{
+				addAtom(COLON);
+			}
+			else if (ch == ';')
+			{
+				addAtom(SEMICOLON);
+			}
+			else if (ch == '(')
+			{
+				addAtom(LPAR);
+			}
+			else if (ch == ')')
+			{
+				addAtom(RPAR);
+			}
+			else if (ch == '\0')
+			{
+				addAtom(FINISH);
+				return FINISH;
+			}
+			else if (ch == '+')
+			{
+				addAtom(ADD);
+			}
+			else if (ch == '-')
+			{
+				addAtom(SUB);
+			}
+			else if (ch == '*')
+			{
+				addAtom(MUL);
+			}
+			else if (ch == '/')
+			{
+				addAtom(DIV);
+			}
+			else if (ch == ',')
+			{
+				addAtom(COMMA);
+			}
+
 			break;
 		case 1:
 			if (isalnum(ch) || ch == '_')
@@ -159,12 +205,12 @@ int getNextTk() // get next token (atom lexical)
 				addAtom(END);
 			else if (strcmp(buf, "RETURN") == 0)
 				addAtom(RETURN);
-			else if (strcmp(buf, "INT") == 0)
-				addAtom(INT);
-			else if (strcmp(buf, "REAL") == 0)
+			else if (strcmp(buf, "TYPE_INT") == 0)
+				addAtom(TYPE_INT);
+			else if (strcmp(buf, "TYPE_REAL") == 0)
 				addAtom(REAL);
-			else if (strcmp(buf, "STR") == 0)
-				addAtom(STR);
+			else if (strcmp(buf, "TYPE_STR") == 0)
+				addAtom(TYPE_STR);
 			else
 			{
 				addAtom(ID); // id simplu
@@ -185,6 +231,7 @@ int getNextTk() // get next token (atom lexical)
 			else
 			{
 				addAtom(INT);
+				pch++;
 			}
 			break;
 		case 4:
@@ -197,6 +244,12 @@ int getNextTk() // get next token (atom lexical)
 			{
 				addAtom(REAL);
 			}
+		case 5:
+			if (ch != '\n')
+				pch++;
+			else
+				state = 0;
+			break;
 
 		default:
 			printf("stare invalida %d\n", state);
