@@ -88,12 +88,12 @@ int nAtomi;		   // numarul de atomi din vectorul atomi
 
 char bufin[30001];
 char *pch;	   // cursor la caracterul curent din bufin
-int linie = 1; // linia curenta; adaugata automat la atom de addAtom
+int line = 1; // linia curenta; adaugata automat la atom de addAtom
 
 void addAtom(int Atom)
 {
+	atomi[nAtomi].linie = line;
 	atomi[nAtomi++].cod = Atom;
-	printf("\nAdded %s\n", tokenNames[Atom]);
 }
 
 // la fiecare apel returneaza codul unui atom
@@ -106,7 +106,7 @@ int getNextTk() // get next token (atom lexical)
 	for (;;)
 	{
 		char ch = *pch;										 // caracterul curent
-		printf("#%d %c\n", state, ch); // pt debugging
+		//printf("#%d %c\n", state, ch); // pt debugging
 		// cate un case pentru fiecare stare din diagrama
 		switch (state)
 		{
@@ -130,7 +130,7 @@ int getNextTk() // get next token (atom lexical)
 			{
 				pch++;
 				if (ch == '\n')
-					linie++;
+					line++;
 				return 0;
 			}
 			else if (ch == '#')
@@ -304,8 +304,6 @@ int getNextTk() // get next token (atom lexical)
 			else
 			{
 				addAtom(ID); // id simplu
-				printf("\nbuf = %s\n",buf);
-
 				strcpy(atomi[nAtomi - 1].s, buf);
 			}
 			return ID;
@@ -327,8 +325,6 @@ int getNextTk() // get next token (atom lexical)
 				buf[n] = '\0';
 				addAtom(INT);
 				atomi[nAtomi-1].i=atoi(buf);
-				printf("\nbuf = %s\n",buf);
-
 				return (INT);
 			}
 			break;
@@ -345,14 +341,13 @@ int getNextTk() // get next token (atom lexical)
 				buf[n] = '\0';
 				addAtom(REAL);
 				atomi[nAtomi-1].r = atof(buf);
-				printf("\nbuf = %s\n",buf);
-				pch++;
 				return (REAL);
 			}
 			break;
 		case 5:
 			if (ch == '\n'){
 				pch++;
+				line++;
 				return 0;
 			}
 			else
@@ -402,9 +397,7 @@ int getNextTk() // get next token (atom lexical)
 				buf[n] = '\0';
 				pch++;
 				addAtom(STR);
-				printf("\nour buffer = %s\n",buf);
 				strcpy(atomi[nAtomi-1].s,buf);
-				printf("stored buffer = %s\n",atomi[nAtomi-1].s);
 				return(STR);
 			}
 			else {
@@ -421,8 +414,11 @@ int getNextTk() // get next token (atom lexical)
 
 void printTokens()
 {
+	int l = 0;
 	for (int i = 0; i < nAtomi; i++)
 	{
+		if (atomi[i].linie != l)
+			printf("\n%d:",l=atomi[i].linie);
 		printf(" %s", tokenNames[atomi[i].cod]);
 		if (atomi[i].cod==11)
 			printf(":%d",atomi[i].i);
