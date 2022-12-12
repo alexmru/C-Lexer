@@ -115,13 +115,14 @@ int getNextTk() // get next token (atom lexical)
 			if (isalpha(ch) || ch == '_')
 			{
 				state = 1;
-				pch++;
 				buf[n++] = ch;
+				pch++;
 				break;
 			}
 			else if (isdigit(ch))
 			{
 				state = 3;
+				buf[n++]=ch;
 				pch++;
 				break;
 			}
@@ -303,6 +304,8 @@ int getNextTk() // get next token (atom lexical)
 			else
 			{
 				addAtom(ID); // id simplu
+				printf("\nbuf = %s\n",buf);
+
 				strcpy(atomi[nAtomi - 1].s, buf);
 			}
 			return ID;
@@ -310,17 +313,22 @@ int getNextTk() // get next token (atom lexical)
 			if (isdigit(ch))
 			{
 				state = 3;
+				buf[n++] = ch;
 				pch++;
 			}
 			else if (ch == '.')
 			{
 				state = 4;
+				buf[n++] = ch;
 				pch++;
 			}
 			else
 			{
+				buf[n] = '\0';
 				addAtom(INT);
-				pch++;
+				atomi[nAtomi-1].i=atoi(buf);
+				printf("\nbuf = %s\n",buf);
+
 				return (INT);
 			}
 			break;
@@ -328,14 +336,20 @@ int getNextTk() // get next token (atom lexical)
 			if (isdigit(ch))
 			{
 				state = 4;
+				buf[n++] = ch;
+				
 				pch++;
 			}
 			else
 			{
+				buf[n] = '\0';
 				addAtom(REAL);
+				atomi[nAtomi-1].r = atof(buf);
+				printf("\nbuf = %s\n",buf);
 				pch++;
 				return (REAL);
 			}
+			break;
 		case 5:
 			if (ch == '\n'){
 				pch++;
@@ -385,13 +399,17 @@ int getNextTk() // get next token (atom lexical)
 		case 10:
 			if (ch=='"')
 			{
+				buf[n] = '\0';
 				pch++;
 				addAtom(STR);
+				printf("\nour buffer = %s\n",buf);
+				strcpy(atomi[nAtomi-1].s,buf);
+				printf("stored buffer = %s\n",atomi[nAtomi-1].s);
 				return(STR);
 			}
 			else {
+				buf[n++]=ch;
 				pch++;
-				n++;
 			}
 			break;
 
@@ -405,7 +423,13 @@ void printTokens()
 {
 	for (int i = 0; i < nAtomi; i++)
 	{
-		printf("%s ", tokenNames[atomi[i].cod]);
+		printf(" %s", tokenNames[atomi[i].cod]);
+		if (atomi[i].cod==11)
+			printf(":%d",atomi[i].i);
+		if (atomi[i].cod==12)
+			printf(":%f",atomi[i].r);
+		if (atomi[i].cod==13)
+			printf(":%s",atomi[i].s);
 	}
 }
 
@@ -425,6 +449,10 @@ int main()
 
 	while (getNextTk() != FINISH)
 		;
+	
+	printTokens();
+	
+	
 	// printf("%s",bufin);
 	// extragere atomi
 
