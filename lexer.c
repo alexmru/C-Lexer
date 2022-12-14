@@ -100,14 +100,12 @@ void addAtom(int Atom)
 int getNextTk() // get next token (atom lexical)
 {
 
-	int state = 0; // starea curenta
+	int state = 0; // current state
 	char buf[100];
 	int n = 0; // nr caractere din buf
 	for (;;)
 	{
 		char ch = *pch; // caracterul curent
-		// printf("#%d %c\n", state, ch); // pt debugging
-		//  cate un case pentru fiecare stare din diagrama
 		switch (state)
 		{
 		case 0:
@@ -117,14 +115,12 @@ int getNextTk() // get next token (atom lexical)
 				state = 1;
 				buf[n++] = ch;
 				pch++;
-				break;
 			}
 			else if (isdigit(ch))
 			{
 				state = 3;
 				buf[n++] = ch;
 				pch++;
-				break;
 			}
 			else if (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t')
 			{
@@ -137,7 +133,6 @@ int getNextTk() // get next token (atom lexical)
 			{
 				pch++;
 				state = 5;
-				break;
 			}
 			else if (ch == ',')
 			{
@@ -162,7 +157,6 @@ int getNextTk() // get next token (atom lexical)
 				addAtom(LPAR);
 				pch++;
 				return LPAR;
-				break;
 			}
 			else if (ch == ')')
 			{
@@ -184,7 +178,6 @@ int getNextTk() // get next token (atom lexical)
 			else if (ch == '-')
 			{
 				addAtom(SUB);
-
 				pch++;
 				return SUB;
 			}
@@ -204,25 +197,21 @@ int getNextTk() // get next token (atom lexical)
 			{
 				pch++;
 				state = 6;
-				break;
 			}
 			else if (ch == '|')
 			{
 				pch++;
 				state = 7;
-				break;
 			}
 			else if (ch == '!')
 			{
 				pch++;
 				state = 8;
-				break;
 			}
 			else if (ch == '=')
 			{
 				pch++;
 				state = 9;
-				break;
 			}
 			else if (ch == '<')
 			{
@@ -234,7 +223,6 @@ int getNextTk() // get next token (atom lexical)
 			{
 				pch++;
 				state = 10;
-				break;
 			}
 			break;
 		case 1:
@@ -302,8 +290,8 @@ int getNextTk() // get next token (atom lexical)
 			}
 			else
 			{
-				addAtom(ID); // id simplu
-				strcpy(atomi[nAtomi - 1].s, buf);
+				strcpy(atomi[nAtomi].s, buf); // copy string
+				addAtom(ID); 
 			}
 			return ID;
 		case 3:
@@ -322,8 +310,8 @@ int getNextTk() // get next token (atom lexical)
 			else
 			{
 				buf[n] = '\0';
+				atomi[nAtomi].i = atoi(buf);
 				addAtom(INT);
-				atomi[nAtomi - 1].i = atoi(buf);
 				return (INT);
 			}
 			break;
@@ -338,8 +326,8 @@ int getNextTk() // get next token (atom lexical)
 			else
 			{
 				buf[n] = '\0';
+				atomi[nAtomi].r = atof(buf);
 				addAtom(REAL);
-				atomi[nAtomi - 1].r = atof(buf);
 				return (REAL);
 			}
 			break;
@@ -396,8 +384,8 @@ int getNextTk() // get next token (atom lexical)
 			{
 				buf[n] = '\0';
 				pch++;
+				strcpy(atomi[nAtomi].s, buf);
 				addAtom(STR);
-				strcpy(atomi[nAtomi - 1].s, buf);
 				return (STR);
 			}
 			else
@@ -419,7 +407,7 @@ void printTokens()
 	for (int i = 0; i < nAtomi; i++)
 	{
 		if (atomi[i].linie != l)
-			printf("\n%d:", l = atomi[i].linie);
+			printf("\n%2d:", l = atomi[i].linie);
 		printf(" %s", tokenNames[atomi[i].cod]);
 		if (atomi[i].cod == 11)
 			printf(":%d", atomi[i].i);
