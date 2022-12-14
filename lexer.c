@@ -29,13 +29,13 @@ enum
 	SUB,
 	MUL,
 	DIV,
+	LESS,
 	AND,
 	OR,
 	NOT,
 	ASSIGN,
 	EQUAL,
-	NOTEQ,
-	LESS
+	NOTEQ
 }; // toate codurile atomilor din Quick, fara SPACE si COMMENT
 
 char tokenNames[][10] = {
@@ -63,18 +63,17 @@ char tokenNames[][10] = {
 	"SUB",
 	"MUL",
 	"DIV",
+	"LESS",
 	"AND",
 	"OR",
 	"NOT",
 	"ASSIGN",
 	"EQUAL",
-	"NOTEQ",
-	"LESS"};
+	"NOTEQ"};
 
 typedef struct
 {
-	int cod;   // codul atomului ( ID, INT, ...)
-	int linie; // linia atomului respectiv
+	int cod, linie; // codul atomului ( ID, INT, ...)
 	union
 	{
 		char s[100]; // pentru ID-uri si stringuri
@@ -83,147 +82,79 @@ typedef struct
 	};
 } Atom;
 
-Atom atomi[10000]; // vectorul cu atomii extrasi din fisierul de intrare
-int nAtomi;		   // numarul de atomi din vectorul atomi
+Atom atomi[10000];	  // vectorul cu atomii extrasi din fisierul de intrare
+int nAtomi, line = 1; // numarul de atomi din vectorul atomi
+char bufin[30001], *pch;
 
-char bufin[30001];
-char *pch;	  // cursor la caracterul curent din bufin
-int line = 1; // linia curenta; adaugata automat la atom de addAtom
-
-void addAtom(int Atom)
+int addAtom(int Atom)
 {
 	atomi[nAtomi].linie = line;
 	atomi[nAtomi++].cod = Atom;
+	return Atom;
 }
 
 // la fiecare apel returneaza codul unui atom
-int getNextTk() // get next token (atom lexical)
+int getNextTk()
 {
-
-	int state = 0; // current state
+	int state = 0, n = 0, i; // state - current state; n - nr caractere din buf
 	char buf[100];
-	int n = 0; // nr caractere din buf
 	for (;;)
 	{
 		char ch = *pch; // caracterul curent
 		switch (state)
 		{
 		case 0:
-			// testam toate tranzitiile posibile din acea stare
+			pch++;
 			if (isalpha(ch) || ch == '_')
 			{
 				state = 1;
 				buf[n++] = ch;
-				pch++;
 			}
 			else if (isdigit(ch))
 			{
 				state = 3;
 				buf[n++] = ch;
-				pch++;
 			}
-			else if (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t')
+			else if (isspace(ch))
 			{
-				pch++;
 				if (ch == '\n')
-					line++;
-				return 0;
-			}
-			else if (ch == '#')
-			{
-				pch++;
-				state = 5;
+					return line++;
 			}
 			else if (ch == ',')
-			{
-				addAtom(COMMA);
-				pch++;
-				return COMMA;
-			}
+				return addAtom(COMMA);
 			else if (ch == ':')
-			{
-				addAtom(COLON);
-				pch++;
-				return COMMA;
-			}
+				return addAtom(COLON);
 			else if (ch == ';')
-			{
-				addAtom(SEMICOLON);
-				pch++;
-				return COMMA;
-			}
+				return addAtom(SEMICOLON);
 			else if (ch == '(')
-			{
-				addAtom(LPAR);
-				pch++;
-				return LPAR;
-			}
+				return addAtom(LPAR);
 			else if (ch == ')')
-			{
-				addAtom(RPAR);
-				pch++;
-				return RPAR;
-			}
+				return addAtom(RPAR);
 			else if (ch == '\0')
-			{
-				addAtom(FINISH);
-				return FINISH;
-			}
+				return addAtom(FINISH);
 			else if (ch == '+')
-			{
-				addAtom(ADD);
-				pch++;
-				return ADD;
-			}
+				return addAtom(ADD);
 			else if (ch == '-')
-			{
-				addAtom(SUB);
-				pch++;
-				return SUB;
-			}
+				return addAtom(SUB);
 			else if (ch == '*')
-			{
-				addAtom(MUL);
-				pch++;
-				return MUL;
-			}
+				return addAtom(MUL);
 			else if (ch == '/')
-			{
-				addAtom(DIV);
-				pch++;
-				return DIV;
-			}
-			else if (ch == '&')
-			{
-				pch++;
-				state = 6;
-			}
-			else if (ch == '|')
-			{
-				pch++;
-				state = 7;
-			}
-			else if (ch == '!')
-			{
-				pch++;
-				state = 8;
-			}
-			else if (ch == '=')
-			{
-				pch++;
-				state = 9;
-			}
+				return addAtom(DIV);
 			else if (ch == '<')
-			{
-				addAtom(LESS);
-				pch++;
-				return LESS;
-			}
+				return addAtom(LESS);
+			else if (ch == '#')
+				state = 5;
+			else if (ch == '&')
+				state = 6;
+			else if (ch == '|')
+				state = 7;
+			else if (ch == '!')
+				state = 8;
+			else if (ch == '=')
+				state = 9;
+
 			else if (ch == '"')
-			{
-				pch++;
 				state = 10;
-			}
 			break;
 		case 1:
 			if (isalnum(ch) || ch == '_')
@@ -232,188 +163,103 @@ int getNextTk() // get next token (atom lexical)
 				buf[n++] = ch;
 			}
 			else
-			{
 				state = 2;
-			}
 			break;
 		case 2:
-			buf[n] = '\0'; // incheiere sir
-			if (strcmp(buf, "var") == 0)
-			{
-				addAtom(VAR);
-				return VAR;
-			}
-			else if (strcmp(buf, "function") == 0)
-			{
-				addAtom(FUNCTION);
-				return FUNCTION;
-			}
-			else if (strcmp(buf, "if") == 0)
-			{
-				addAtom(IF);
-				return IF;
-			}
-			else if (strcmp(buf, "else") == 0)
-			{
-				addAtom(ELSE);
-				return ELSE;
-			}
-			else if (strcmp(buf, "while") == 0)
-			{
-				addAtom(WHILE);
-				return WHILE;
-			}
-			else if (strcmp(buf, "end") == 0)
-			{
-				addAtom(END);
-				return END;
-			}
-			else if (strcmp(buf, "return") == 0)
-			{
-				addAtom(RETURN);
-				return RETURN;
-			}
-			else if (strcmp(buf, "int") == 0)
-			{
-				addAtom(TYPE_INT);
-				return TYPE_INT;
-			}
-			else if (strcmp(buf, "real") == 0)
-			{
-				addAtom(TYPE_REAL);
-				return TYPE_REAL;
-			}
-			else if (strcmp(buf, "str") == 0)
-			{
-				addAtom(TYPE_STR);
-				return TYPE_STR;
-			}
-			else
-			{
-				strcpy(atomi[nAtomi].s, buf); // copy string
-				addAtom(ID); 
-			}
-			return ID;
-		case 3:
-			if (isdigit(ch))
-			{
-				state = 3;
-				buf[n++] = ch;
-				pch++;
-			}
-			else if (ch == '.')
+			buf[n] = '\0'; // end the string
+			char keywords[][10] = {"var", "function", "if", "else", "while",
+								   "end", "return", "int", "real", "str"};
+			for (i = 0; i < 10; i++)
+				if (!strcmp(buf, keywords[i]))
+					return addAtom(i + VAR);
+
+			strcpy(atomi[nAtomi].s, buf); // copy string
+			return addAtom(ID);
+
+		case 3: // integer being read. if '.' is read go to real state
+			if (ch == '.')
 			{
 				state = 4;
-				buf[n++] = ch;
-				pch++;
 			}
-			else
+			else if (!isdigit(ch))
 			{
 				buf[n] = '\0';
 				atomi[nAtomi].i = atoi(buf);
-				addAtom(INT);
-				return (INT);
+				return addAtom(INT);
 			}
+			buf[n++] = ch;
+			pch++;
 			break;
-		case 4:
+		case 4: // real number being read
 			if (isdigit(ch))
 			{
-				state = 4;
 				buf[n++] = ch;
-
 				pch++;
+				continue;
 			}
-			else
-			{
-				buf[n] = '\0';
-				atomi[nAtomi].r = atof(buf);
-				addAtom(REAL);
-				return (REAL);
-			}
-			break;
-		case 5:
+			buf[n] = '\0';
+			atomi[nAtomi].r = atof(buf);
+			return addAtom(REAL);
+		case 5: // comment being read
+			pch++;
 			if (ch == '\n')
 			{
-				pch++;
 				line++;
 				return 0;
 			}
-			else
-				pch++;
 			break;
-		case 6:
+		case 6: // && (AND)
 			if (ch == '&')
 			{
 				pch++;
-				addAtom(AND);
-				return AND;
+				return addAtom(AND);
 			}
-		case 7:
+		case 7: // || (OR)
 			if (ch == '|')
 			{
 				pch++;
-				addAtom(OR);
-				return OR;
+				return addAtom(OR);
 			}
-		case 8:
+		case 8: // ! or !=
 			if (ch == '=')
 			{
 				pch++;
-				addAtom(NOTEQ);
-				return NOTEQ;
+				return addAtom(NOTEQ);
 			}
-			else
-			{
-				addAtom(NOT);
-				return (NOT);
-			}
-		case 9:
+			return addAtom(NOT);
+		case 9: // = or ==
 			if (ch == '=')
 			{
 				pch++;
-				addAtom(EQUAL);
-				return EQUAL;
+				return addAtom(EQUAL);
 			}
-			else
-			{
-				addAtom(ASSIGN);
-				return (ASSIGN);
-			}
-		case 10:
-			if (ch == '"')
+			return addAtom(ASSIGN);
+		case 10: // string is being read
+			pch++;
+			if (ch == '"') // if end of string is found copy its value and return it
 			{
 				buf[n] = '\0';
-				pch++;
 				strcpy(atomi[nAtomi].s, buf);
-				addAtom(STR);
-				return (STR);
+				return addAtom(STR);
 			}
-			else
-			{
-				buf[n++] = ch;
-				pch++;
-			}
+			buf[n++] = ch;
 			break;
-
-		default:
-			printf("stare invalida %d\n", state);
 		}
 	}
 }
 
 void printTokens()
 {
-	int l = 0;
 	for (int i = 0; i < nAtomi; i++)
 	{
-		if (atomi[i].linie != l)
-			printf("\n%2d:", l = atomi[i].linie);
+		if (i == 0 || atomi[i].linie > atomi[i - 1 > 0 ? i - 1 : 0].linie)
+			printf("\n%2d:", atomi[i].linie);
 		printf(" %s", tokenNames[atomi[i].cod]);
-		if (atomi[i].cod == 11)
+		if (atomi[i].cod == INT)
 			printf(":%d", atomi[i].i);
-		if (atomi[i].cod == 12)
+		if (atomi[i].cod == REAL)
 			printf(":%f", atomi[i].r);
-		if (atomi[i].cod == 13 || atomi[i].cod == 0)
+		if (atomi[i].cod == STR || atomi[i].cod == ID)
 			printf(":%s", atomi[i].s);
 	}
 }
@@ -422,24 +268,11 @@ int main()
 {
 	FILE *fis;
 	fis = fopen("1.q", "rb");
-	if (fis == NULL)
-	{
-		printf("nu s-a putut deschide fisierul");
-		return -1;
-	}
 	int n = fread(bufin, 1, 30000, fis); // returneaza nr de elemente citite integral
 	bufin[n] = '\0';
 	fclose(fis);
 	pch = bufin; // initializare pch pe prima pozitie din bufin
-
 	while (getNextTk() != FINISH)
 		;
-
 	printTokens();
-
-	// printf("%s",bufin);
-	// extragere atomi
-
-	// afisare atomi
-	//...
 }
